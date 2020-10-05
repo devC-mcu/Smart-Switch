@@ -1,3 +1,14 @@
+//NodeMCU ESP8266 is used as hardware
+//Arduino IDE is used for writing and uploading the codeto NodeMCU
+//NodeMCU is also connect to bluetooth module
+
+//This code helps the user to provide the wifi details using the Android App using a BLUETOOTH connection
+//so it is not necesary to define wifi details in the code
+//This makes is easier for different user to use this device and to change the wifi details without
+//Re-Uploading the code.
+
+//Google Firebase is used to upload and read the data through cloud 
+
 #include <EEPROM.h>
 
 #include <ArduinoJson.h>
@@ -12,10 +23,9 @@ test5,test6,test7,test8, saved;
 
   uint addr = 0;
 
-  // fake data
-
-
 void setup() {
+  
+  //define NodeMCU IO pins
 
   pinMode(D0, OUTPUT);
   pinMode(D1, OUTPUT);
@@ -38,8 +48,9 @@ void setup() {
     char str[30] = "";
   } data;
       
-    
-
+      
+  //EEPROM is used to save the user data 
+  //so the data is not lost on power cut
   EEPROM.get(addr,data);
   Serial.println("New values are: "+String(data.val)+","+String(data.str));
   fireset = String(data.str);
@@ -50,6 +61,7 @@ void setup() {
 
 void loop() {
   
+  //check the values received from BLuetooth module
   if(Serial.available()){
     char q = Serial.read();
     Serial.println(q);
@@ -121,6 +133,10 @@ void loop() {
             break;
         }
   }
+  
+  //If NodeMCU is connected to the internet, then this information is uploaded to the firebase
+  //and thorugh firebase the information is send to the user
+  //so that the user knows that his device is connected suuccessfully to the internet
   if(WiFi.status() == WL_CONNECTED){
     Firebase.setInt(fire+"/wifi", 1);
     Serial.println(fireset);
@@ -132,6 +148,8 @@ void loop() {
   }  
 }
 
+
+//Firebase setup
 void firebaseSetup(){
   EEPROM.write(0, '8');
   while(!Serial.available()){
@@ -164,8 +182,6 @@ void firebaseSetup(){
   initialize();
   
 }
-
-
 
 void initialize(){
   fire = "users/"+fireset;
@@ -218,9 +234,9 @@ void wifiSetup(){
        wifi="";
 }
 
+//Reading the values from Firebase
 void firebase(){
     digitalWrite(D0, Firebase.getInt(test1));
-    Serial.println("light1");
     digitalWrite(D1, Firebase.getInt(test2));
     digitalWrite(D2, Firebase.getInt(test3));
     digitalWrite(D3, Firebase.getInt(test4));
